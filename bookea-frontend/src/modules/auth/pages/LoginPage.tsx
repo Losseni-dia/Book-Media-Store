@@ -1,13 +1,22 @@
 import { useState } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link, useLocation, useSearchParams } from "react-router-dom";
 import { authService } from "../services";
 import { useAuth } from "../context/AuthContext";
 
 type View = "login" | "forgot";
 
+function resolveSafeInternalPath(fromState: string | undefined, fromQuery: string | null): string | null {
+  const raw = fromState ?? fromQuery ?? null;
+  if (!raw) return null;
+  const decoded = decodeURIComponent(raw.trim());
+  if (decoded.startsWith("/") && !decoded.startsWith("//")) return decoded;
+  return null;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { checkAuth } = useAuth();
   const registered = (location.state as { registered?: boolean })?.registered;
 
@@ -27,7 +36,10 @@ export default function LoginPage() {
     try {
       await authService.login({ username: email, password });
       await checkAuth();
-      navigate("/profile");
+      const stateFrom = (location.state as { from?: string } | null)?.from;
+      const queryFrom = searchParams.get("from");
+      const target = resolveSafeInternalPath(stateFrom, queryFrom) ?? "/profile";
+      navigate(target, { replace: true });
     } catch {
       setError("Email ou mot de passe incorrect.");
     } finally {

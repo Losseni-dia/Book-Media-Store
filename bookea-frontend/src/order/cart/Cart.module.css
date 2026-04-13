@@ -1,72 +1,217 @@
 .container {
-    max-width: 1000px;
-    margin: 3rem auto;
-    padding: 0 1rem;
+    max-width: 1100px;
+    margin: 4rem auto;
+    padding: 0 2rem;
+    font-family: -apple-system, system-ui, sans-serif;
+}
+
+.title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 3rem;
+    color: #1d1d1f;
 }
 
 .grid {
     display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 2rem;
+    grid-template-columns: 1fr 380px;
+    gap: 4rem;
+    align-items: start;
 }
 
+/* --- LISTE DES ARTICLES --- */
 .item {
     display: flex;
-    justify-content: space-between;
-    padding: 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
-    background: white;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem 0;
+    border-bottom: 1.5px solid #f2f2f2;
+    transition: all 0.3s ease;
 }
 
-.productType {
-    font-size: 0.7rem;
-    color: #64748b;
-    text-transform: uppercase;
-    font-weight: 700;
-}
-
-.controls {
+.imageWrapper {
+    width: 110px;
+    height: 110px;
+    background: #f5f5f7;
+    border-radius: 18px;
+    padding: 10px;
     display: flex;
     align-items: center;
+    justify-content: center;
+}
+
+.imageWrapper img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.details {
+    flex-grow: 1;
+}
+
+.badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #E8520A;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.details h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: #1d1d1f;
+}
+
+.itemPrice {
+    font-weight: 600;
+    color: #86868b;
+}
+
+/* --- CONTROLES --- */
+.actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
     gap: 1rem;
 }
 
-.controls input {
-    width: 50px;
-    padding: 0.3rem;
-    border: 1px solid #cbd5e1;
+.quantityControl {
+    display: flex;
+    align-items: center;
+    background: #f5f5f7;
+    padding: 5px;
+    border-radius: 30px;
+    gap: 15px;
 }
 
-.summary {
-    background: #f8fafc;
-    padding: 2rem;
-    border-radius: 0.75rem;
-    height: fit-content;
+.quantityControl button {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
-.total {
-    font-size: 1.5rem;
+.quantityControl button:hover {
+    background: #E8520A;
+    color: white;
+}
+
+.removeBtn {
+    background: none;
+    border: none;
+    color: #ff3b30;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* --- SIDEBAR RÉSUMÉ --- */
+.summaryCard {
+    background: #ffffff;
+    border: 1.5px solid #f2f2f2;
+    padding: 2.5rem;
+    border-radius: 28px;
+    position: sticky;
+    top: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+}
+
+.summaryCard h2 {
+    font-size: 1.4rem;
+    margin-bottom: 2rem;
+}
+
+.summaryLine {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    color: #86868b;
+    font-weight: 500;
+}
+
+.free {
+    color: #2ecc71;
+    font-weight: 700;
+}
+
+.divider {
+    height: 1.5px;
+    background: #f2f2f2;
     margin: 1.5rem 0;
 }
 
-.total span {
-    font-weight: 800;
-    color: #0f172a;
+.totalLine {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+
+.totalLine span:first-child {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.finalAmount {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #E8520A;
 }
 
 .checkoutBtn {
     width: 100%;
-    padding: 1rem;
-    background: #2563eb;
+    background: #1d1d1f;
     color: white;
     border: none;
-    border-radius: 0.5rem;
-    font-weight: 600;
+    padding: 1.2rem;
+    border-radius: 20px;
+    font-weight: 800;
+    letter-spacing: 1px;
     cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.empty {
+.checkoutBtn:hover {
+    background: #E8520A;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(232, 82, 10, 0.2);
+}
+
+/* --- VIDE --- */
+.emptyContainer {
     text-align: center;
-    padding: 5rem;
-    color: #64748b;
+    padding: 8rem 2rem;
+}
+
+.emptyIcon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+}
+
+.emptyContainer h2 {
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.continueBtn {
+    margin-top: 2rem;
+    background: #1d1d1f;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 30px;
+    font-weight: 700;
+    cursor: pointer;
 }

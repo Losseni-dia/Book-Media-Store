@@ -1,4 +1,4 @@
-import type { Article, ArticleCreateInput, Comment } from '../types/blog.types';
+import type { Article, ArticleCreateInput, Comment, CommentModeration, CommentModerationStatus } from '../types/blog.types';
 
 const BASE = '/api/blog';
 
@@ -19,13 +19,13 @@ const postJson = (url: string, body: unknown) =>
 	});
 
 export const blogService = {
-	async getArticles(search?: string): Promise<Article[]> {
+	async getArticles(search?: string, signal?: AbortSignal): Promise<Article[]> {
 		const q = search?.trim();
 		const url =
 			q && q.length > 0
 				? `${BASE}/articles?search=${encodeURIComponent(q)}`
 				: `${BASE}/articles`;
-		const res = await fetch(url);
+		const res = await fetch(url, { signal });
 		return parseJson<Article[]>(res);
 	},
 
@@ -83,13 +83,24 @@ export const blogService = {
 	},
 
 	async updateArticle(id: string | number, data: ArticleCreateInput): Promise<Article> {
-		const res = await fetch(`${BASE}/articles/${id}`, {
+		const res = await fetch(`${BASE}/admin/articles/${id}`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			credentials: 'include',
 			body: JSON.stringify(data),
 		});
 		return parseJson<Article>(res);
+	},
+
+	/** Admin: update comment text — PUT /api/blog/admin/comments/:id */
+	async updateComment(id: string | number, data: { content: string }): Promise<CommentModeration> {
+		const res = await fetch(`${BASE}/admin/comments/${id}`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+			body: JSON.stringify(data),
+		});
+		return parseJson<CommentModeration>(res);
 	},
 
 	/**
@@ -129,5 +140,25 @@ export const blogService = {
 			credentials: 'include',
 		});
 		return parseJson<Article>(res);
+	},
+
+	async getPendingComments(): Promise<CommentModeration[]> {
+		const res = await fetch(`${BASE}/admin/comments/pending`, { credentials: 'include' });
+		return parseJson<CommentModeration[]>(res);
+	},
+
+	async getRecentUserCommentsForModeration(): Promise<CommentModeration[]> {
+		const res = await fetch(`${BASE}/admin/comments/recent-from-users`, { credentials: 'include' });
+		return parseJson<CommentModeration[]>(res);
+	},
+
+	async moderateComment(id: string | number, status: Exclude<CommentModerationStatus, 'PENDING'>): Promise<CommentModeration> {
+		const res = await fetch(`${BASE}/admin/comments/${id}/moderation`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+			body: JSON.stringify({ status }),
+		});
+		return parseJson<CommentModeration>(res);
 	},
 };

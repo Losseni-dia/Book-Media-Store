@@ -1,10 +1,16 @@
 import { format, formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, ThumbsDown, ThumbsUp, UserCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../../auth/context/AuthContext';
 import { CommentForm } from '../components/CommentForm';
 import { blogService } from '../services/blog.service';
 import type { Article, Comment } from '../types/blog.types';
+import {
+	clearPendingBlogAction,
+	readPendingBlogAction,
+	savePendingBlogAction,
+} from '../utils/pendingBlogActionStorage';
 import styles from './BlogDetailPage.module.css';
 
 function formatArticleDate(iso: string) {
@@ -32,11 +38,24 @@ function formatCommentTime(iso: string) {
 
 export function BlogDetailPage() {
 	const { id } = useParams<{ id: string }>();
+	const navigate = useNavigate();
+	const location = useLocation();
+	const { isAuthenticated, isLoading: authLoading } = useAuth();
 	const [article, setArticle] = useState<Article | null>(null);
 	const [comments, setComments] = useState<Comment[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [pending, setPending] = useState<'like' | 'dislike' | null>(null);
+	const [intentCommentDraft, setIntentCommentDraft] = useState<string | null>(null);
+
+	const clearIntentCommentDraft = useCallback(() => {
+		setIntentCommentDraft(null);
+	}, []);
+
+	function redirectToLogin() {
+		const returnPath = `${location.pathname}${location.search}${location.hash}`;
+		navigate(`/login?from=${encodeURIComponent(returnPath)}`, { state: { from: returnPath } });
+	}
 
 	useEffect(() => {
 		if (!id) {
@@ -74,12 +93,48 @@ export function BlogDetailPage() {
 		};
 	}, [id]);
 
+	useEffect(() => {
+		if (!isAuthenticated || authLoading || !article || !id) return;
+
+		const action = readPendingBlogAction();
+		if (!action) return;
+		if (Number(action.articleId) !== Number(article.id)) return;
+
+		if (action.type === 'COMMENT') {
+			setIntentCommentDraft(action.payload);
+			return;
+		}
+
+		clearPendingBlogAction();
+		const reaction: 'like' | 'dislike' = action.type === 'LIKE' ? 'like' : 'dislike';
+		setPending(reaction);
+		void (async () => {
+			try {
+				const updated =
+					action.type === 'LIKE'
+						? await blogService.likeArticle(article.id)
+						: await blogService.dislikeArticle(article.id);
+				setArticle(updated);
+			} catch {
+				/* keep counts */
+			} finally {
+				setPending(null);
+			}
+		})();
+	}, [isAuthenticated, authLoading, article, id]);
+
 	function handleCommentAdded(comment: Comment) {
 		setComments((prev) => [comment, ...prev]);
 	}
 
 	async function handleLike() {
 		if (!article) return;
+		if (authLoading) return;
+		if (!isAuthenticated) {
+			savePendingBlogAction({ type: 'LIKE', articleId: article.id });
+			redirectToLogin();
+			return;
+		}
 		setPending('like');
 		try {
 			const updated = await blogService.likeArticle(article.id);
@@ -93,6 +148,12 @@ export function BlogDetailPage() {
 
 	async function handleDislike() {
 		if (!article) return;
+		if (authLoading) return;
+		if (!isAuthenticated) {
+			savePendingBlogAction({ type: 'DISLIKE', articleId: article.id });
+			redirectToLogin();
+			return;
+		}
 		setPending('dislike');
 		try {
 			const updated = await blogService.dislikeArticle(article.id);
@@ -181,7 +242,7 @@ export function BlogDetailPage() {
 								type="button"
 								className={styles.reactionBtn}
 								onClick={handleLike}
-								disabled={pending !== null}
+								disabled={pending !== null || authLoading}
 								aria-label="Like"
 							>
 								<ThumbsUp size={20} strokeWidth={2} />
@@ -191,7 +252,7 @@ export function BlogDetailPage() {
 								type="button"
 								className={styles.reactionBtn}
 								onClick={handleDislike}
-								disabled={pending !== null}
+								disabled={pending !== null || authLoading}
 								aria-label="Dislike"
 							>
 								<ThumbsDown size={20} strokeWidth={2} />
@@ -221,6 +282,11 @@ export function BlogDetailPage() {
 									<div className={styles.bubbleCard}>
 										<div className={styles.bubbleMeta}>
 											<span className={styles.author}>{c.authorUsername}</span>
+											{c.status === 'PENDING' ? (
+												<span className={styles.pendingBadge} title="Visible to you until a moderator approves it">
+													Pending
+												</span>
+											) : null}
 											<time className={styles.timestamp} dateTime={c.createdAt}>
 												{formatCommentTime(c.createdAt)}
 											</time>
@@ -231,7 +297,16 @@ export function BlogDetailPage() {
 							))}
 						</ul>
 					)}
-					<CommentForm articleId={articleIdNum} onCommentAdded={handleCommentAdded} ui={formUi} />
+					<CommentForm
+						articleId={articleIdNum}
+						onCommentAdded={handleCommentAdded}
+						ui={formUi}
+						onRequireLogin={redirectToLogin}
+						isAuthenticated={isAuthenticated}
+						authLoading={authLoading}
+						intentCommentDraft={intentCommentDraft}
+						onIntentCommentDraftApplied={clearIntentCommentDraft}
+					/>
 				</section>
 			</div>
 		</div>

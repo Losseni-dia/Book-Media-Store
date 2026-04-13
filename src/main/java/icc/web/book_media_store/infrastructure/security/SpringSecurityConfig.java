@@ -30,19 +30,22 @@ public class SpringSecurityConfig {
                                 .csrf(csrf -> csrf.disable()) // Une seule fois suffit
 
                                 .authorizeHttpRequests(auth -> auth
-                                                // 1. Routes publiques Auth & User
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                                 .requestMatchers("/api/auth/**").permitAll()
+                                                /* TEMP: remove after DB seeded — open blog dummy-data init in browser */
+                                                .requestMatchers("/api/blog/init").permitAll()
                                                 .requestMatchers("/api/chat/auth/**").permitAll()
                                                 .requestMatchers("/api/user/register").permitAll()
                                                 .requestMatchers("/ws-chat/**").permitAll()
                                                 .requestMatchers("/error").permitAll()
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                                /* Blog back-office (controller methods also use @PreAuthorize) */
+                                                .requestMatchers("/api/blog/admin/**").hasRole("ADMIN")
                                                 .requestMatchers("/error").permitAll()
                                                 
                                                 .requestMatchers("/api/**").permitAll()
                                                 .requestMatchers("/uploads/**").permitAll()
 
-                                                // 2. Blog: Lecture publique
                                                 .requestMatchers(HttpMethod.GET,
                                                                 "/api/blog/articles",
                                                                 "/api/blog/articles/*",
@@ -50,10 +53,17 @@ public class SpringSecurityConfig {
                                                                 "/api/blog/images/*")
                                                 .permitAll()
 
-                                                // 3. Tout le reste demande une authentification
-                                                // Note: Utilise .authenticated() pour que ton 'Principal' ne soit pas
-                                                // null
-                                                .anyRequest().authenticated())
+                                                .requestMatchers(HttpMethod.POST,
+                                                                "/api/blog/articles/*/comments",
+                                                                "/api/blog/*/like",
+                                                                "/api/blog/*/dislike")
+                                                .authenticated()
+
+                                                .requestMatchers("/api/rooms/**").permitAll()
+
+                                                .requestMatchers("/api/**").authenticated()
+
+                                                .anyRequest().permitAll())
 
                                 .formLogin(form -> form
                                                 .loginProcessingUrl("/api/auth/login")
@@ -77,7 +87,7 @@ public class SpringSecurityConfig {
                                                                 .setStatus(HttpServletResponse.SC_OK))
                                                 .invalidateHttpSession(true)
                                                 .deleteCookies("JSESSIONID"))
-                                .build(); // C'est cet appel qui transforme le tout en SecurityFilterChain
+                                .build();
         }
 
         /**

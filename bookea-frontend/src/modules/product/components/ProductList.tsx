@@ -2,12 +2,16 @@ import React, { useEffect, useState } from "react";
 import { ProductResponse } from "../type/product";
 import { productService } from "../services/productService";
 import styles from "./ProductList.module.css";
+
 interface ProductListProps {
   onEdit: (product: ProductResponse) => void;
 }
+
 const ProductList: React.FC<ProductListProps> = ({ onEdit }) => {
   const [products, setProducts] = useState<ProductResponse[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const API_URL = "http://localhost:8080";
 
   const fetchProducts = async () => {
     try {
@@ -25,81 +29,94 @@ const ProductList: React.FC<ProductListProps> = ({ onEdit }) => {
     fetchProducts();
   }, []);
 
-  // --- NOUVELLE FONCTION DE SUPPRESSION ---
+  const getImageUrl = (url: string | null | undefined) => {
+    if (!url) return null;
+    return url.startsWith("http") ? url : `${API_URL}${url}`;
+  };
+
   const handleDelete = async (id: number) => {
-    // 1. Demander confirmation à l'Admin
-    const confirmDelete = window.confirm("Êtes-vous sûr de vouloir supprimer ce produit définitivement ?");
-    
-    if (confirmDelete) {
+    if (window.confirm("Supprimer ce produit définitivement ?")) {
       try {
-        // 2. Appel au backend pour supprimer en base de données
         await productService.deleteProduct(id);
-        
-        // 3. Mise à jour de l'affichage : on filtre la liste pour enlever le produit supprimé
-        setProducts((prevProducts) => prevProducts.filter((product) => product.id !== id));
-        
-        alert("Produit supprimé avec succès !");
+        setProducts((prev) => prev.filter((p) => p.id !== id));
       } catch (err: any) {
-        alert("Erreur lors de la suppression : " + err.message);
+        alert("Erreur : " + err.message);
       }
     }
   };
 
-  const getTypeBadge = (type: string) => {
-    const classMap: Record<string, string> = {
-      LIVRE: styles.badgeLivre,
-      MATERIEL_INFORMATIQUE: styles.badgeInfo,
-      HIFI: styles.badgeHifi,
-    };
-    return (
-      <span className={`${styles.badge} ${classMap[type] || ""}`}>{type}</span>
-    );
-  };
-
-  if (loading) return <div className={styles.loader}>Chargement...</div>;
+  if (loading)
+    return <div className={styles.loader}>Chargement de l'inventaire...</div>;
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2>Catalogue actuel ({products.length})</h2>
+        <div className={styles.headerInfo}>
+          <h2>Inventaire</h2>
+          <span>{products.length} produits en ligne</span>
+        </div>
         <button onClick={fetchProducts} className={styles.refreshBtn}>
-          🔄 Rafraîchir
+          Mettre à jour
         </button>
       </div>
+
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Type</th>
-              <th>Nom</th>
+              <th>Produit</th>
+              <th>Catégorie</th>
               <th>Prix</th>
               <th>Stock</th>
-              <th className="text-center">Actions</th>
+              <th className={styles.textRight}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {products.map((product) => (
               <tr key={product.id}>
-                <td className={styles.idCol}>#{product.id}</td>
-                <td>{getTypeBadge(product.type)}</td>
-                <td className={styles.nameCol}>{product.name}</td>
+                {/* Cellule Produit avec Image */}
+                <td className={styles.productCell}>
+                  <div className={styles.imgThumb}>
+                    <img
+                      src={getImageUrl(product.imageUrl) || ""}
+                      alt={product.name}
+                    />
+                  </div>
+                  <div className={styles.productMeta}>
+                    <span className={styles.productName}>{product.name}</span>
+                    <span className={styles.productId}>#{product.id}</span>
+                  </div>
+                </td>
+
+                <td>
+                  <span className={`${styles.badge} ${styles[product.type]}`}>
+                    {product.type.replace("_", " ")}
+                  </span>
+                </td>
+
                 <td className={styles.priceCol}>
                   {product.price.toFixed(2)} €
                 </td>
-                <td
-                  className={
-                    product.stock > 5 ? styles.stockOk : styles.stockLow
-                  }
-                >
-                  {product.stock}
+
+                <td>
+                  <div
+                    className={
+                      product.stock > 5 ? styles.stockOk : styles.stockLow
+                    }
+                  >
+                    {product.stock} unités
+                  </div>
                 </td>
+
                 <td className={styles.actions}>
-                  <button className={styles.editBtn} onClick={() => onEdit(product)}>
-                    Éditer
+                  <button
+                    className={styles.editBtn}
+                    onClick={() => onEdit(product)}
+                  >
+                    Modifier
                   </button>
-                  <button 
-                    className={styles.delBtn} 
+                  <button
+                    className={styles.delBtn}
                     onClick={() => handleDelete(product.id)}
                   >
                     Supprimer

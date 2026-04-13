@@ -1,9 +1,11 @@
 import { format } from 'date-fns';
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/context/AuthContext';
 import { blogService } from '../services/blog.service';
 import type { Article } from '../types/blog.types';
+import { savePendingBlogAction } from '../utils/pendingBlogActionStorage';
 import styles from './ArticleCard.module.css';
 
 const PREVIEW_LEN = 160;
@@ -11,8 +13,15 @@ const PREVIEW_LEN = 160;
 type Props = { article: Article };
 
 export function ArticleCard({ article }: Props) {
+	const navigate = useNavigate();
+	const { isAuthenticated, isLoading: authLoading } = useAuth();
 	const [localArticle, setLocalArticle] = useState(article);
 	const [pending, setPending] = useState<'like' | 'dislike' | null>(null);
+
+	function redirectToLoginForArticle() {
+		const returnPath = `/blog/${localArticle.id}`;
+		navigate(`/login?from=${encodeURIComponent(returnPath)}`, { state: { from: returnPath } });
+	}
 
 	useEffect(() => {
 		setLocalArticle(article);
@@ -31,6 +40,12 @@ export function ArticleCard({ article }: Props) {
 	}
 
 	async function handleLike() {
+		if (authLoading) return;
+		if (!isAuthenticated) {
+			savePendingBlogAction({ type: 'LIKE', articleId: localArticle.id });
+			redirectToLoginForArticle();
+			return;
+		}
 		setPending('like');
 		try {
 			const updated = await blogService.likeArticle(localArticle.id);
@@ -43,6 +58,12 @@ export function ArticleCard({ article }: Props) {
 	}
 
 	async function handleDislike() {
+		if (authLoading) return;
+		if (!isAuthenticated) {
+			savePendingBlogAction({ type: 'DISLIKE', articleId: localArticle.id });
+			redirectToLoginForArticle();
+			return;
+		}
 		setPending('dislike');
 		try {
 			const updated = await blogService.dislikeArticle(localArticle.id);
@@ -78,7 +99,7 @@ export function ArticleCard({ article }: Props) {
 							type="button"
 							className={styles.reactionBtn}
 							onClick={handleLike}
-							disabled={pending !== null}
+							disabled={pending !== null || authLoading}
 							aria-label="Like"
 						>
 							<ThumbsUp size={18} strokeWidth={2} />
@@ -88,7 +109,7 @@ export function ArticleCard({ article }: Props) {
 							type="button"
 							className={styles.reactionBtn}
 							onClick={handleDislike}
-							disabled={pending !== null}
+							disabled={pending !== null || authLoading}
 							aria-label="Dislike"
 						>
 							<ThumbsDown size={18} strokeWidth={2} />

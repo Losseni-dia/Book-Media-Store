@@ -1,6 +1,8 @@
 package icc.web.book_media_store.module.blog.dto;
 
+import icc.web.book_media_store.module.blog.model.CommentStatus;
 import java.time.LocalDateTime;
 
-public record CommentResponse(Long id, String content, String authorUsername, LocalDateTime createdAt) {
+public record CommentResponse(
+		Long id, String content, String authorUsername, LocalDateTime createdAt, CommentStatus status) {
 }

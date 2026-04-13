@@ -2,6 +2,8 @@ package icc.web.book_media_store.module.blog.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -40,6 +42,11 @@ public class Comment {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "article_id", nullable = false)
 	private Article article;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 20)
+	@Builder.Default
+	private CommentStatus status = CommentStatus.PENDING;
 
 	@PrePersist
 	protected void onCreate() {

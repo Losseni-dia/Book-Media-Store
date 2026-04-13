@@ -2,18 +2,26 @@ package icc.web.book_media_store.module.blog.service;
 
 import icc.web.book_media_store.module.blog.dto.ArticleRequest;
 import icc.web.book_media_store.module.blog.dto.ArticleResponse;
+import icc.web.book_media_store.module.blog.dto.CommentModerationRequest;
+import icc.web.book_media_store.module.blog.dto.CommentModerationResponse;
 import icc.web.book_media_store.module.blog.dto.CommentRequest;
 import icc.web.book_media_store.module.blog.dto.CommentResponse;
 import icc.web.book_media_store.module.blog.dto.mapper.BlogMapper;
 import icc.web.book_media_store.module.blog.model.Article;
 import icc.web.book_media_store.module.blog.model.Comment;
+import icc.web.book_media_store.module.blog.model.CommentStatus;
 import icc.web.book_media_store.module.blog.repository.ArticleRepository;
 import icc.web.book_media_store.module.blog.repository.CommentRepository;
+import icc.web.book_media_store.module.user.model.role.RoleName;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,6 +30,62 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 @Transactional
 public class BlogService {
+
+	private static final int DUMMY_ARTICLE_TARGET_TOTAL = 100;
+
+	/** Realistic titles: books, technology, and hi-fi (random picks for bulk seed rows). */
+	private static final List<String> DUMMY_TITLE_POOL = List.of(
+			"The Evolution of Noise-Canceling Headphones",
+			"Top 10 Sci-Fi Books of the Decade",
+			"Understanding React Hooks in Production Apps",
+			"Vinyl vs Digital: The Ultimate Audio Showdown",
+			"Building REST APIs with Spring Boot and OpenAPI",
+			"How to Choose Your First Turntable Without Regrets",
+			"Reading Lists for Long Winter Evenings",
+			"OLED vs Mini-LED: What Home Theater Buyers Should Know",
+			"TypeScript Patterns for Large Front-End Codebases",
+			"The Quiet Revolution in Nearfield Studio Monitors",
+			"Forgotten Classics: Science Fiction Before 1980",
+			"Mechanical Keyboards: Sound, Feel, and Sustainability",
+			"Streaming Hi-Res Audio Without Dropouts or Glitches",
+			"Bookbinding and the Comeback of Small Press Editions",
+			"Smart Speakers and Privacy: A Practical Household Guide",
+			"GraphQL vs REST for a Modern Bookstore API");
+
+	/** Rich paragraphs combined randomly into article bodies. */
+	private static final List<String> DUMMY_BODY_PARAGRAPH_POOL = List.of(
+			"Audiophiles once chased raw specs; today they chase believable staging, low noise floors, and gear that "
+					+ "disappears into the music. Whether you listen on headphones or full-range towers, the goal is the "
+					+ "same: trust what you hear on Tuesday night after a long day, not only on demo tracks in a bright showroom.",
+			"Books are time machines bound in paper or pixels. A great novel does not explain the world—it rearranges your "
+					+ "attention until familiar streets feel uncanny. That is why annual “best of” lists matter less than the "
+					+ "slow work of building a personal canon you will still defend five years from now.",
+			"Modern web stacks reward small, composable units of state. Hooks are not magic; they are contracts between "
+					+ "render cycles and side effects. Teams that document those contracts—what runs when, what cancels on "
+					+ "unmount—ship fewer regressions when routes grow and data fetching splinters across features.",
+			"Spring Boot turns opinionated defaults into speed, but production is where opinions meet reality: thread pools, "
+					+ "health checks, idempotent retries, and logs you can search when a customer says “it failed around 14:10.” "
+					+ "Treat operations as part of the feature, not a postscript.",
+			"Vinyl is not about nostalgia alone; it is about pacing. Side A ends, you stand, flip the record, and the room "
+					+ "resets. In a playlist culture, that friction can be a feature—if your setup is quiet enough to reward it.",
+			"Hi-fi shopping is full of acronyms and tribalism. Start with your room: dimensions, reflections, and where you "
+					+ "actually sit. Speakers and headphones interact with space more than with marketing claims. Measure a little, "
+					+ "listen a lot, and upgrade where the bottleneck really is.");
+
+	/** Cover images: books, tech, headphones, vinyl, speakers, reading, workspace. */
+	private static final List<String> DUMMY_IMAGE_POOL = List.of(
+			"https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1200&q=80",
+			"https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=1200&q=80",
+			"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80",
+			"https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=80",
+			"https://images.unsplash.com/photo-1545127398-f3a9a1a51aea?auto=format&fit=crop&w=1200&q=80",
+			"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1200&q=80",
+			"https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=1200&q=80",
+			"https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?auto=format&fit=crop&w=1200&q=80",
+			"https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=1200&q=80",
+			"https://images.unsplash.com/photo-1555949963-aa79dcee981c?auto=format&fit=crop&w=1200&q=80",
+			"https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=1200&q=80",
+			"https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=1200&q=80");
 
 	private final ArticleRepository articleRepository;
 	private final CommentRepository commentRepository;
@@ -55,7 +119,9 @@ public class BlogService {
 		if (!articleRepository.existsByIdAndDeletedFalseAndActiveTrue(articleId)) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Article not found");
 		}
-		return commentRepository.findByArticleIdOrderByCreatedAtDesc(articleId).stream()
+		return commentRepository
+				.findByArticle_IdAndStatusOrderByCreatedAtDesc(articleId, CommentStatus.APPROVED)
+				.stream()
 				.map(blogMapper::toCommentResponse)
 				.toList();
 	}
@@ -63,13 +129,58 @@ public class BlogService {
 	public CommentResponse addComment(Long articleId, CommentRequest request) {
 		Article article = articleRepository.findByIdAndDeletedFalseAndActiveTrue(articleId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Article not found"));
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		if (auth == null || !auth.isAuthenticated()) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+		}
+		String principal = auth.getName();
+		if (principal == null || principal.isBlank()) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+		}
 		Comment comment = Comment.builder()
 				.content(request.content())
-				.authorUsername("user")
+				.authorUsername(principal)
 				.article(article)
+				.status(CommentStatus.PENDING)
 				.build();
 		Comment saved = commentRepository.save(comment);
 		return blogMapper.toCommentResponse(saved);
+	}
+
+	public List<CommentModerationResponse> listPendingComments() {
+		return commentRepository.findByStatusWithArticleOrderByCreatedAtDesc(CommentStatus.PENDING).stream()
+				.map(blogMapper::toCommentModerationResponse)
+				.toList();
+	}
+
+	/** Five most recent blog comments whose authors are not ADMIN users (moderation snapshot). */
+	public List<CommentModerationResponse> listFiveMostRecentCommentsFromNonAdminUsers() {
+		return commentRepository
+				.findRecentCommentsFromNonAdminUsers(RoleName.ADMIN, PageRequest.of(0, 5))
+				.stream()
+				.map(blogMapper::toCommentModerationResponse)
+				.toList();
+	}
+
+	public CommentModerationResponse moderateComment(Long commentId, CommentModerationRequest request) {
+		CommentStatus target = request.status();
+		if (target != CommentStatus.APPROVED && target != CommentStatus.REJECTED) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only APPROVED or REJECTED are allowed");
+		}
+		Comment comment = commentRepository.findById(commentId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
+		comment.setStatus(target);
+		Comment saved = commentRepository.save(comment);
+		return blogMapper.toCommentModerationResponse(saved);
+	}
+
+	/** Admin: rewrite comment body (status and author unchanged). */
+	public CommentModerationResponse updateCommentContent(Long commentId, CommentRequest request) {
+		Comment comment = commentRepository.findById(commentId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
+		comment.setContent(request.content());
+		Comment saved = commentRepository.save(comment);
+		return blogMapper.toCommentModerationResponse(saved);
 	}
 
 	public ArticleResponse createArticle(ArticleRequest request) {
@@ -128,6 +239,19 @@ public class BlogService {
 		return blogMapper.toArticleResponse(articleRepository.save(article));
 	}
 
+	/** Stacks 2–4 random paragraphs for a varied, realistic article body. */
+	private static String composeRandomArticleBody(Random random, List<String> paragraphs) {
+		int count = 2 + random.nextInt(3);
+		StringBuilder sb = new StringBuilder();
+		for (int p = 0; p < count; p++) {
+			if (p > 0) {
+				sb.append("\n\n");
+			}
+			sb.append(paragraphs.get(random.nextInt(paragraphs.size())));
+		}
+		return sb.toString();
+	}
+
 	public String initializeDummyData() {
 		if (articleRepository.count() != 0) {
 			return "Database already contains data.";
@@ -135,7 +259,7 @@ public class BlogService {
 
 		ThreadLocalRandom rnd = ThreadLocalRandom.current();
 
-		/* Ten seeded articles for demos / check-in presentation. */
+		/* Curated articles (high quality) + generated rows => exactly DUMMY_ARTICLE_TARGET_TOTAL. */
 		record Seed(String title, String content, String imageUrl) {
 		}
 
@@ -212,43 +336,67 @@ public class BlogService {
 				.content("This is exactly the overview I needed—clear and forward-looking.")
 				.authorUsername("alex")
 				.article(first)
+				.status(CommentStatus.APPROVED)
 				.build());
 		commentRepository.save(Comment.builder()
 				.content("Any recommended reading for ethics in deployed models?")
 				.authorUsername("sam")
 				.article(first)
+				.status(CommentStatus.APPROVED)
 				.build());
 		commentRepository.save(Comment.builder()
 				.content("Loved the section on smaller models. More teams should try distillation first.")
 				.authorUsername("maria")
 				.article(first)
+				.status(CommentStatus.APPROVED)
 				.build());
 		commentRepository.save(Comment.builder()
 				.content("Saving this for our next guild meeting. Thanks!")
 				.authorUsername("user")
 				.article(first)
+				.status(CommentStatus.APPROVED)
 				.build());
 
 		commentRepository.save(Comment.builder()
 				.content("Already ordered three from your fiction list. Impossible to choose just one.")
 				.authorUsername("jordan")
 				.article(second)
+				.status(CommentStatus.APPROVED)
 				.build());
 		commentRepository.save(Comment.builder()
 				.content("Would love a follow-up on translated works this year.")
 				.authorUsername("taylor")
 				.article(second)
+				.status(CommentStatus.APPROVED)
 				.build());
 		commentRepository.save(Comment.builder()
 				.content("The thriller picks are spot on—finished two in a weekend.")
 				.authorUsername("casey")
 				.article(second)
+				.status(CommentStatus.APPROVED)
 				.build());
 		commentRepository.save(Comment.builder()
 				.content("Great balance between buzzy releases and quieter gems.")
 				.authorUsername("riley")
 				.article(second)
+				.status(CommentStatus.APPROVED)
 				.build());
+
+		int curatedCount = built.size();
+		int generatedCount = DUMMY_ARTICLE_TARGET_TOTAL - curatedCount;
+		Random articleRandom = new Random();
+		for (int i = 0; i < generatedCount; i++) {
+			String title = DUMMY_TITLE_POOL.get(articleRandom.nextInt(DUMMY_TITLE_POOL.size()));
+			String content = composeRandomArticleBody(articleRandom, DUMMY_BODY_PARAGRAPH_POOL);
+			String imageUrl = DUMMY_IMAGE_POOL.get(articleRandom.nextInt(DUMMY_IMAGE_POOL.size()));
+			articleRepository.save(Article.builder()
+					.title(title)
+					.content(content)
+					.imageUrl(imageUrl)
+					.likes(articleRandom.nextInt(151))
+					.dislikes(articleRandom.nextInt(21))
+					.build());
+		}
 
 		return "Database initialized with dummy data.";
 	}

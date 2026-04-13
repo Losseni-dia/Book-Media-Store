@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArticleCard } from '../components/ArticleCard';
 import { blogService } from '../services/blog.service';
 import type { Article } from '../types/blog.types';
@@ -11,32 +11,54 @@ function isPublicVisibleArticle(a: Article): boolean {
 	return active === true && deleted === false;
 }
 
+/** First occurrence wins — avoids duplicate cards if the payload ever repeats an id. */
+function uniqueArticlesById(items: Article[]): Article[] {
+	const seen = new Set<number>();
+	const out: Article[] = [];
+	for (const a of items) {
+		if (seen.has(a.id)) continue;
+		seen.add(a.id);
+		out.push(a);
+	}
+	return out;
+}
+
 export function BlogPage() {
 	const [articles, setArticles] = useState<Article[]>([]);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	/** Bumps on each effect run so late responses from a previous run are ignored (StrictMode / fast typing). */
+	const fetchGenerationRef = useRef(0);
 
 	useEffect(() => {
-		let cancelled = false;
+		const controller = new AbortController();
+		const { signal } = controller;
+		const generation = ++fetchGenerationRef.current;
+
 		setLoading(true);
 		setError(null);
-		blogService
-			.getArticles(searchQuery || undefined)
-			.then((data) => {
-				if (!cancelled) setArticles(data.filter(isPublicVisibleArticle));
-			})
-			.catch((err) => {
-				if (!cancelled) {
-					setError(err instanceof Error ? err.message : 'Failed to load articles');
-					setArticles([]);
+
+		(async () => {
+			try {
+				const data = await blogService.getArticles(searchQuery || undefined, signal);
+				if (signal.aborted || generation !== fetchGenerationRef.current) return;
+				const visible = uniqueArticlesById(data.filter(isPublicVisibleArticle));
+				setArticles(visible);
+			} catch (err) {
+				if (signal.aborted || generation !== fetchGenerationRef.current) return;
+				if (err instanceof DOMException && err.name === 'AbortError') return;
+				setError(err instanceof Error ? err.message : 'Failed to load articles');
+				setArticles([]);
+			} finally {
+				if (!signal.aborted && generation === fetchGenerationRef.current) {
+					setLoading(false);
 				}
-			})
-			.finally(() => {
-				if (!cancelled) setLoading(false);
-			});
+			}
+		})();
+
 		return () => {
-			cancelled = true;
+			controller.abort();
 		};
 	}, [searchQuery]);
 

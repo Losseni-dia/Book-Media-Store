@@ -2,6 +2,7 @@ package icc.web.book_media_store.module.blog.dto.mapper;
 
 import icc.web.book_media_store.module.blog.dto.ArticleRequest;
 import icc.web.book_media_store.module.blog.dto.ArticleResponse;
+import icc.web.book_media_store.module.blog.dto.CommentModerationResponse;
 import icc.web.book_media_store.module.blog.dto.CommentResponse;
 import icc.web.book_media_store.module.blog.model.Article;
 import icc.web.book_media_store.module.blog.model.Comment;
@@ -24,4 +25,8 @@ public interface BlogMapper {
 	ArticleResponse toArticleResponse(Article article);
 
 	CommentResponse toCommentResponse(Comment comment);
+
+	@Mapping(source = "article.id", target = "articleId")
+	@Mapping(source = "article.title", target = "articleTitle")
+	CommentModerationResponse toCommentModerationResponse(Comment comment);
 }

@@ -1,14 +1,180 @@
-.container { background: white; border-radius: 8px; border: 1px solid var(--bookea-border); overflow: hidden; }
-.header { padding: 1.5rem; background: var(--bookea-black); color: white; display: flex; justify-content: space-between; align-items: center; }
-.refreshBtn { background: transparent; border: 1px solid var(--bookea-border); color: white; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
-.tableWrapper { overflow-x: auto; }
-.table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-.table th { background: var(--bookea-bg); padding: 12px; text-align: left; text-transform: uppercase; color: var(--bookea-text-muted); }
-.table td { padding: 12px; border-bottom: 1px solid var(--bookea-border); }
-.priceCol { color: var(--bookea-orange); font-weight: bold; }
-.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; color: white; }
-.badgeLivre { background: #2d6a4f; }
-.badgeInfo { background: #1e293b; }
-.badgeHifi { background: var(--bookea-orange); }
-.editBtn { color: var(--bookea-orange); background: none; border: none; cursor: pointer; }
-.delBtn { color: #dc2626; background: none; border: none; cursor: pointer; margin-left: 10px; }
+.container {
+    background: #ffffff;
+    border-radius: 28px;
+    border: 1px solid #f2f2f2;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+/* --- HEADER --- */
+.header {
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+}
+
+.headerInfo h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0;
+    color: #1d1d1f;
+}
+
+.headerInfo span {
+    font-size: 0.8rem;
+    color: #86868b;
+    font-weight: 500;
+}
+
+.refreshBtn {
+    background: #f5f5f7;
+    border: none;
+    color: #1d1d1f;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* --- TABLE --- */
+.tableWrapper { width: 100%; }
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    text-align: left;
+    padding: 1rem 2rem;
+    background: #fbfbfd;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #86868b;
+    font-weight: 800;
+    border-bottom: 1px solid #f2f2f2;
+}
+
+.table td {
+    padding: 1.2rem 2rem;
+    border-bottom: 1px solid #f9f9f9;
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+.table tr:hover td {
+    background: #fcfcfd;
+}
+
+/* --- CELLULE PRODUIT (IMAGE + TEXTE) --- */
+.productCell {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.imgThumb {
+    width: 48px;
+    height: 48px;
+    background: #f5f5f7;
+    border-radius: 10px;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.imgThumb img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.productMeta {
+    display: flex;
+    flex-direction: column;
+}
+
+.productName {
+    font-weight: 700;
+    color: #1d1d1f;
+}
+
+.productId {
+    font-size: 0.7rem;
+    color: #aeaeb2;
+}
+
+/* --- BADGES --- */
+.badge {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: white;
+}
+
+.LIVRE { background-color: #E8520A; }
+.MATERIEL_INFORMATIQUE { background-color: #1d1d1f; }
+.HIFI { background-color: #6366f1; }
+
+/* --- STOCK --- */
+.stockOk { color: #2ecc71; font-weight: 700; font-size: 0.8rem; }
+.stockLow { 
+    color: #E8520A; 
+    font-weight: 700;
+    font-size: 0.8rem;
+    background: #fff5f0;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+/* --- ACTIONS --- */
+.actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.editBtn {
+    background: #f5f5f7;
+    color: #1d1d1f;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.editBtn:hover {
+    background: #1d1d1f;
+    color: white;
+}
+
+.delBtn {
+    background: transparent;
+    color: #ff3b30;
+    border: none;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* --- LOADER --- */
+.loader {
+    text-align: center;
+    padding: 4rem;
+    font-weight: 800;
+    color: #E8520A;
+}
