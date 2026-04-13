@@ -13,7 +13,6 @@ const WS_URL = "http://localhost:8080/ws-chat";
 const CHAT_TOPIC = "/topic/room/1";
 const SEND_DEST = "/app/chat.send/1";
 const HISTORY_URL = "http://localhost:8080/api/chat/rooms/1/messages";
-const LOGIN_URL = "http://localhost:8080/api/chat/auth/login";
 const ROOM_ID = 1;
 
 type ChatMessage = {
@@ -45,23 +44,18 @@ function colorForUsername(name: string): string {
 }
 
 const LiveChat: React.FC = () => {
-  const [token, setToken] = useState<string | null>(() =>
+  const [token] = useState<string | null>(() =>
     localStorage.getItem(AUTH_KEY)
   );
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [wsConnected, setWsConnected] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  const [loginUser, setLoginUser] = useState("");
-  const [loginPass, setLoginPass] = useState("");
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const [loginLoading, setLoginLoading] = useState(false);
 
   const clientRef = useRef<Client | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const username = useMemo(() => getUsernameFromToken(token), [token]);
-  const isLoggedIn = Boolean(token && username);
+  const canParticipate = Boolean(token && username);
 
   const viewerCount = useMemo(
     () => Math.floor(120 + Math.random() * 8880),
@@ -145,42 +139,6 @@ const LiveChat: React.FC = () => {
       }),
     });
     setDraft("");
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError(null);
-    setLoginLoading(true);
-    try {
-      const res = await fetch(LOGIN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: loginUser.trim(),
-          password: loginPass,
-        }),
-      });
-      const data = (await res.json()) as { token?: string; accessToken?: string };
-      const newToken = data.token ?? data.accessToken;
-      if (!res.ok || !newToken) {
-        setLoginError("Identifiants invalides ou réponse inattendue.");
-        return;
-      }
-      localStorage.setItem(AUTH_KEY, newToken);
-      setToken(newToken);
-      setShowLogin(false);
-      setLoginPass("");
-      setLoginUser("");
-    } catch {
-      setLoginError("Erreur réseau.");
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem(AUTH_KEY);
-    setToken(null);
   };
 
   const shell: React.CSSProperties = {
@@ -299,191 +257,61 @@ const LiveChat: React.FC = () => {
             </span>
           </div>
 
-          {!isLoggedIn ? (
-            <div>
+          {!canParticipate ? (
+            <div
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                padding: "12px 14px",
+                borderRadius: 6,
+                backgroundColor: "#2d2d32",
+                color: "#a1a1aa",
+                fontSize: 13,
+                textAlign: "center",
+              }}
+            >
+              Connecte-toi sur le site pour participer au chat
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 8 }}>
               <input
                 type="text"
-                readOnly
-                value="Connecte-toi pour participer au chat"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSend();
+                }}
+                placeholder="Envoyer un message"
                 style={{
-                  width: "100%",
-                  boxSizing: "border-box",
+                  flex: 1,
                   padding: "10px 12px",
                   borderRadius: 6,
                   border: "1px solid #3d3d44",
-                  backgroundColor: "#2d2d32",
-                  color: "#71717a",
-                  marginBottom: 8,
+                  backgroundColor: "#0e0e10",
+                  color: "#efeff1",
+                  outline: "none",
                 }}
               />
               <button
                 type="button"
-                onClick={() => setShowLogin(true)}
+                onClick={handleSend}
                 style={{
-                  width: "100%",
-                  padding: "10px 12px",
+                  padding: "10px 14px",
                   borderRadius: 6,
                   border: "none",
                   backgroundColor: "#f97316",
                   color: "#fff",
                   fontWeight: 600,
                   cursor: "pointer",
+                  whiteSpace: "nowrap",
                 }}
               >
-                Se connecter
-              </button>
-            </div>
-          ) : (
-            <div>
-              <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                <input
-                  type="text"
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSend();
-                  }}
-                  placeholder="Envoyer un message"
-                  style={{
-                    flex: 1,
-                    padding: "10px 12px",
-                    borderRadius: 6,
-                    border: "1px solid #3d3d44",
-                    backgroundColor: "#0e0e10",
-                    color: "#efeff1",
-                    outline: "none",
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleSend}
-                  style={{
-                    padding: "10px 14px",
-                    borderRadius: 6,
-                    border: "none",
-                    backgroundColor: "#f97316",
-                    color: "#fff",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Envoyer
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: 6,
-                  border: "1px solid #3d3d44",
-                  backgroundColor: "transparent",
-                  color: "#adadb8",
-                  cursor: "pointer",
-                }}
-              >
-                Se déconnecter
+                Envoyer
               </button>
             </div>
           )}
         </div>
       </div>
-
-      {showLogin && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.65)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: 16,
-          }}
-          onClick={() => !loginLoading && setShowLogin(false)}
-        >
-          <form
-            onSubmit={handleLogin}
-            style={{
-              width: "100%",
-              maxWidth: 360,
-              backgroundColor: "#18181b",
-              borderRadius: 8,
-              padding: 20,
-              border: "1px solid #2d2d32",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 style={{ margin: "0 0 16px", fontSize: 18 }}>Connexion</h2>
-            {loginError && (
-              <p style={{ color: "#e91916", fontSize: 13, marginBottom: 12 }}>
-                {loginError}
-              </p>
-            )}
-            <label
-              style={{ display: "block", fontSize: 12, color: "#adadb8", marginBottom: 4 }}
-            >
-              Nom d&apos;utilisateur
-            </label>
-            <input
-              autoFocus
-              value={loginUser}
-              onChange={(e) => setLoginUser(e.target.value)}
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                marginBottom: 12,
-                padding: "10px 12px",
-                borderRadius: 6,
-                border: "1px solid #3d3d44",
-                backgroundColor: "#0e0e10",
-                color: "#efeff1",
-              }}
-            />
-            <label
-              style={{ display: "block", fontSize: 12, color: "#adadb8", marginBottom: 4 }}
-            >
-              Mot de passe
-            </label>
-            <input
-              type="password"
-              value={loginPass}
-              onChange={(e) => setLoginPass(e.target.value)}
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                marginBottom: 16,
-                padding: "10px 12px",
-                borderRadius: 6,
-                border: "1px solid #3d3d44",
-                backgroundColor: "#0e0e10",
-                color: "#efeff1",
-              }}
-            />
-            <button
-              type="submit"
-              disabled={loginLoading}
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: 6,
-                border: "none",
-                backgroundColor: "#f97316",
-                color: "#fff",
-                fontWeight: 600,
-                cursor: loginLoading ? "wait" : "pointer",
-                opacity: loginLoading ? 0.7 : 1,
-              }}
-            >
-              {loginLoading ? "Connexion…" : "Se connecter"}
-            </button>
-          </form>
-        </div>
-      )}
     </div>
   );
 };
