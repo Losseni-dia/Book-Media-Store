@@ -47,7 +47,6 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    cursor: pointer;
 }
 
 .card:hover {
@@ -139,6 +138,9 @@
 .price {
     font-size: 1.1rem;
     font-weight: 800;
+    white-space: nowrap;
+    gap: 10px; 
+    padding-right: 6px; 
 }
 
 .addBtn {
@@ -151,6 +153,7 @@
     font-weight: 800;
     cursor: pointer;
     transition: 0.3s;
+    padding: 8px 12px;
 }
 
 .addBtn:hover:not(:disabled) {
@@ -168,4 +171,117 @@
     padding: 100px;
     font-weight: 700;
     color: #E8520A;
+}
+
+/* --- FILTRES --- */
+.filterContainer {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+}
+
+.filterBtn {
+    background-color: #f2f2f2;
+    color: #86868b;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filterBtn:hover {
+    background-color: #e5e5e5;
+    color: #1d1d1f;
+}
+
+.activeFilter {
+    background-color: #1d1d1f;
+    color: #ffffff;
+}
+
+.activeFilter:hover {
+    background-color: #1d1d1f; /* Reste noir au survol si c'est actif */
+}
+
+/* --- FILTRE DE PRIX (SLIDER) --- */
+.priceFilterContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 3rem;
+    color: #1d1d1f;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.priceLabel {
+    min-width: 160px;
+    text-align: right;
+}
+/* --- FILTRE DE PRIX (MIN / MAX) --- */
+.priceFilterContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px; /* Espace réduit entre les éléments */
+    margin-bottom: 2.5rem;
+    color: #1d1d1f;
+    flex-wrap: wrap;
+}
+
+.priceInputGroup {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fbfbfd;
+    border: 1.5px solid #f2f2f2;
+    padding: 6px 14px; /* BEAUCOUP plus fin qu'avant */
+    border-radius: 12px; /* Moins rond, plus moderne */
+    transition: all 0.3s ease;
+}
+
+.priceInputGroup:focus-within {
+    border-color: #1d1d1f;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.priceLabel {
+    color: #86868b;
+    font-size: 0.75rem; /* Texte plus petit et discret */
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.priceInput {
+    width: 45px; /* Champ légèrement plus étroit */
+    border: none;
+    background: transparent;
+    font-size: 0.95rem; /* Prix moins énorme */
+    font-weight: 700;
+    color: #1d1d1f;
+    outline: none;
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+/* Cache les petites flèches moches des navigateurs */
+.priceInput::-webkit-outer-spin-button,
+.priceInput::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.priceSeparator {
+    color: #86868b;
+    font-weight: 500;
+    font-size: 0.85rem;
 }

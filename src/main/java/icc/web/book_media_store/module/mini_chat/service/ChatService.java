@@ -9,6 +9,8 @@ import icc.web.book_media_store.module.mini_chat.model.MessageType;
 import icc.web.book_media_store.module.mini_chat.model.Room;
 import icc.web.book_media_store.module.user.model.User; // L'entité centrale
 import icc.web.book_media_store.module.user.model.role.Role;
+import icc.web.book_media_store.module.user.model.role.RoleName;
+import icc.web.book_media_store.module.user.model.role.repository.RoleRepository;
 import icc.web.book_media_store.module.mini_chat.repository.MessageRepository;
 import icc.web.book_media_store.module.mini_chat.repository.RoomRepository;
 import icc.web.book_media_store.module.user.repository.UserRepository;
@@ -31,16 +33,19 @@ public class ChatService {
 	private final MessageRepository messageRepository;
 	private final RoomRepository roomRepository;
 	private final UserRepository userRepository;
+	private final RoleRepository roleRepository;
 	private final PasswordEncoder passwordEncoder;
 
 	public ChatService(
 			MessageRepository messageRepository,
 			RoomRepository roomRepository,
 			UserRepository userRepository,
+			RoleRepository roleRepository,
 			PasswordEncoder passwordEncoder) {
 		this.messageRepository = messageRepository;
 		this.roomRepository = roomRepository;
 		this.userRepository = userRepository;
+		this.roleRepository = roleRepository;
 		this.passwordEncoder = passwordEncoder;
 	}
 
@@ -113,17 +118,24 @@ public class ChatService {
 		}
 
 		return userRepository.findByUsername(senderUsername).orElseGet(() -> {
+			// 1. On récupère l'entité Role depuis la BDD
+			Role userRole = roleRepository.findByName(RoleName.USER)
+					.orElseThrow(() -> new RuntimeException("Erreur : Rôle USER introuvable en base !"));
+
+			// 2. On construit le guest avec l'entité Role trouvée
 			User guest = User.builder()
 					.username(senderUsername)
-					.firstName("Guest") // Requis par ton entité User
-					.lastName(senderUsername) // Requis par ton entité User
+					.firstName("Guest")
+					.lastName(senderUsername)
 					.password(passwordEncoder.encode("guest"))
 					.email(senderUsername + "@guest.com")
-					.birthDate(LocalDate.of(2000, 1, 1)) // Date bidon pour la validation
+					.birthDate(LocalDate.of(2000, 1, 1))
 					.address("Online Chat")
 					.postalCode("00000")
-					.roles(Set.of(Role.USER)) // <--- Utilisation du Set de rôles
+					.active(true)
+					.roles(Set.of(userRole)) // <--- On passe l'objet entité ici
 					.build();
+
 			return userRepository.save(guest);
 		});
 	}

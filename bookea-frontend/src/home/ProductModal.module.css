@@ -1,0 +1,196 @@
+/* src/modules/home/ProductModal.module.css */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal {
+    background-color: #ffffff;
+    border-radius: 28px; /* Même arrondi que tes cartes */
+    width: 100%;
+    max-width: 850px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.closeBtn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #f2f2f2;
+    color: #1d1d1f;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.closeBtn:hover {
+    background: #e5e5e5;
+}
+
+.modalContent {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .modalContent {
+        flex-direction: row;
+    }
+}
+
+/* Zone Image calquée sur ton design */
+.imageSection {
+    flex: 1;
+    background-color: #f5f5f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2.5rem;
+    min-height: 300px;
+}
+
+.imageSection img {
+    max-width: 100%;
+    max-height: 350px;
+    object-fit: contain;
+    mix-blend-mode: multiply; /* Magie pour les fonds blancs */
+}
+
+.placeholder {
+    color: #a1a1a6;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: 2px;
+}
+
+/* Zone Infos calquée sur ton design */
+.infoSection {
+    flex: 1;
+    padding: 2.5rem;
+    color: #1d1d1f;
+    display: flex;
+    flex-direction: column;
+}
+
+.badge {
+    display: inline-block;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    align-self: flex-start;
+}
+
+.LIVRE { background-color: #E8520A; }
+.MATERIEL_INFORMATIQUE { background-color: #1d1d1f; }
+.HIFI { background-color: #6366f1; }
+
+.title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.price {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #1d1d1f;
+    margin-bottom: 1.5rem;
+}
+
+.description {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: #86868b;
+    margin-bottom: 2rem;
+}
+
+.specifics {
+    background: #fbfbfd;
+    border: 1.5px solid #f2f2f2;
+    padding: 1.5rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+}
+
+.specificItem {
+    margin-bottom: 0.8rem;
+    font-size: 0.95rem;
+    color: #86868b;
+}
+
+.specificItem:last-child {
+    margin-bottom: 0;
+}
+
+.specificItem span {
+    font-weight: 700;
+    color: #1d1d1f;
+}
+
+/* Bouton calqué sur ton design */
+.addBtn {
+    margin-top: auto;
+    background: #1d1d1f;
+    color: #ffffff;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 24px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.3s;
+    text-transform: uppercase;
+    width: 100%;
+}
+
+.addBtn:hover:not(:disabled) {
+    background-color: #E8520A;
+}
+
+.addBtn:disabled {
+    background: #e5e5e5;
+    color: #a1a1a6;
+    cursor: not-allowed;
+}

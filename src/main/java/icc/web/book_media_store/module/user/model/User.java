@@ -56,12 +56,11 @@ public class User {
     private String avatarUrl;
 
     // --- GESTION DES RÔLES ---
-    @ElementCollection(fetch = FetchType.EAGER) // EAGER car on a souvent besoin des rôles pour la sécurité
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role")
-    @Builder.Default // Pour que le builder utilise la valeur par défaut ci-dessous
-    private Set<Role> roles = new HashSet<>(Set.of(Role.USER));
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "user_role", // Nom de ta table de liaison (link table)
+            joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    @Builder.Default
+    private Set<Role> roles = new HashSet<>();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)

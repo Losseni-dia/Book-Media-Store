@@ -28,7 +28,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // On transforme le Set<Role> en List<SimpleGrantedAuthority>
         List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
                 .collect(Collectors.toList());
 
         // On retourne l'objet User de Spring Security

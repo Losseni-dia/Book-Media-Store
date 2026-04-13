@@ -33,25 +33,25 @@ public class AdminUserService {
     }
 
     private AdminUserResponse toResponse(User user) {
-    String roles = user.getRoles().stream()
-            .map(Enum::name)
-            .collect(Collectors.joining(", "));
+            // On doit passer par role.getName() (ton Enum) puis .name()
+            String roles = user.getRoles().stream()
+                            .map(role -> String.valueOf(role.getName()))
+                            .collect(Collectors.joining(", "));
 
-    return new AdminUserResponse(
-            user.getId(),
-            user.getFirstName(),
-            user.getLastName(),
-            user.getUsername(),
-            user.getEmail(),
-            user.getBirthDate(),
-            user.getAddress(),
-            user.getPostalCode(),
-            user.getPhone(),
-            user.getAvatarUrl(),
-            roles,
-            user.isActive(),
-            user.getCreatedAt(),
-            user.getUpdatedAt()
-    );
-}
+            return new AdminUserResponse(
+                            user.getId(),
+                            user.getFirstName(),
+                            user.getLastName(),
+                            user.getUsername(),
+                            user.getEmail(),
+                            user.getBirthDate(),
+                            user.getAddress(),
+                            user.getPostalCode(),
+                            user.getPhone(),
+                            user.getAvatarUrl(),
+                            roles,
+                            user.isActive(),
+                            user.getCreatedAt(),
+                            user.getUpdatedAt());
+    }
 }

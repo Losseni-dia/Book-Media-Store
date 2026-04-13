@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,17 +43,18 @@ public interface UserMapper {
     @Mapping(target = "phone", ignore = true) 
     User toEntity(RegisterRequest request);
 
-    // --- LOGIQUE DE MAPPING PERSONNALISÉE ---
-
+   
     /**
-     * Transforme le Set<Role> en Set<String> pour le DTO
+     * Transforme le Set d'entités Role en Set de Strings pour le DTO
      */
     @Named("mapRoles")
     default Set<String> mapRoles(Set<Role> roles) {
-        if (roles == null)
-            return null;
+        if (roles == null) {
+            return Collections.emptySet();
+        }
         return roles.stream()
-                .map(Enum::name)
+                .map(role -> String.valueOf(role.getName())) // role.getName() retourne un Enum, on le convertit en String
                 .collect(Collectors.toSet());
+
     }
 }
